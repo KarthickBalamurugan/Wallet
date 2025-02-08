@@ -64,18 +64,21 @@ function PayNow() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url: url }),
       });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const result = await response.json();
-      return result;
+      const data = await response.json();
+      return {
+        isValid: !data.isPhishing, // assuming API returns isPhishing boolean
+        message: data.message || 'Link validation complete'
+      };
     } catch (error) {
       console.error('Error validating link:', error);
-      throw error;
+      throw new Error('Failed to validate link: ' + error.message);
     }
   }
 

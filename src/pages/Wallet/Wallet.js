@@ -50,18 +50,37 @@ function Wallet() {
     // Add more transactions as needed
   ]);
 
-  // Calculate totals by category
-  const calculateTotalsByCategory = (type) => {
-    return transactions
-      .filter(t => t.type === type)
-      .reduce((acc, curr) => {
-        acc[curr.category] = (acc[curr.category] || 0) + curr.amount;
-        return acc;
-      }, {});
-  };
+  // Initialize charts with default data
+  const [expensesData, setExpensesData] = useState({
+    labels: ['Food', 'Shopping', 'Transport', 'Entertainment', 'Others'],
+    datasets: [{
+      data: [300, 500, 200, 400, 300],
+      backgroundColor: [
+        '#FF6384',
+        '#36A2EB',
+        '#FFCE56',
+        '#4BC0C0',
+        '#FF9F40'
+      ],
+      borderColor: 'rgba(255, 255, 255, 0.2)',
+      borderWidth: 1,
+    }]
+  });
 
-  const [expensesData, setExpensesData] = useState({});
-  const [depositsData, setDepositsData] = useState({});
+  const [depositsData, setDepositsData] = useState({
+    labels: ['Salary', 'Bonus', 'Returns', 'Others'],
+    datasets: [{
+      data: [3000, 1000, 500, 200],
+      backgroundColor: [
+        '#00ff9d',
+        '#00cc7d',
+        '#009e5f',
+        '#00815D'
+      ],
+      borderColor: 'rgba(255, 255, 255, 0.2)',
+      borderWidth: 1,
+    }]
+  });
 
   const cardsRef = useRef([]);
 
@@ -92,15 +111,29 @@ function Wallet() {
     return () => ctx.revert();
   }, []);
 
-  // Update chart data when transactions change
+  // Update the charts when transactions change
   useEffect(() => {
-    const expenses = calculateTotalsByCategory('expense');
-    const deposits = calculateTotalsByCategory('deposit');
+    // Group expenses by category
+    const expensesByCategory = transactions
+      .filter(t => t.type === 'outgoing')
+      .reduce((acc, curr) => {
+        acc[curr.description] = (acc[curr.description] || 0) + curr.amount;
+        return acc;
+      }, {});
 
+    // Group deposits by category
+    const depositsByCategory = transactions
+      .filter(t => t.type === 'incoming')
+      .reduce((acc, curr) => {
+        acc[curr.description] = (acc[curr.description] || 0) + curr.amount;
+        return acc;
+      }, {});
+
+    // Update expenses chart data
     setExpensesData({
-      labels: Object.keys(expenses),
+      labels: Object.keys(expensesByCategory),
       datasets: [{
-        data: Object.values(expenses),
+        data: Object.values(expensesByCategory),
         backgroundColor: [
           '#FF6384',
           '#36A2EB',
@@ -108,22 +141,23 @@ function Wallet() {
           '#4BC0C0',
           '#FF9F40'
         ],
-        borderColor: '#1a1a1a',
+        borderColor: 'rgba(255, 255, 255, 0.2)',
         borderWidth: 1,
       }]
     });
 
+    // Update deposits chart data
     setDepositsData({
-      labels: Object.keys(deposits),
+      labels: Object.keys(depositsByCategory),
       datasets: [{
-        data: Object.values(deposits),
+        data: Object.values(depositsByCategory),
         backgroundColor: [
           '#00ff9d',
           '#00cc7d',
           '#009e5f',
           '#00815D'
         ],
-        borderColor: '#1a1a1a',
+        borderColor: 'rgba(255, 255, 255, 0.2)',
         borderWidth: 1,
       }]
     });
@@ -143,6 +177,7 @@ function Wallet() {
       setTotalIncoming(incoming);
       setTotalOutgoing(outgoing);
       setNetBalance(incoming - outgoing);
+      setBalance(incoming - outgoing); // Update the displayed balance
     };
 
     calculateBalances();
@@ -152,13 +187,16 @@ function Wallet() {
     e.preventDefault();
     if (amount && !isNaN(amount) && transactionCategory) {
       const newAmount = parseFloat(amount);
+      const newTransaction = {
+        id: transactions.length + 1,
+        type: transactionType === 'deposit' ? 'incoming' : 'outgoing',
+        amount: newAmount,
+        date: new Date().toISOString().split('T')[0],
+        description: transactionCategory
+      };
       
       // Add to transactions
-      setTransactions(prev => [...prev, {
-        type: transactionType,
-        category: transactionCategory,
-        amount: newAmount
-      }]);
+      setTransactions(prev => [...prev, newTransaction]);
 
       // Update balance
       setBalance(prev => transactionType === 'deposit' ? 
@@ -204,18 +242,22 @@ function Wallet() {
     .reduce((sum, t) => sum + t.amount, 0);
 
   const chartOptions = {
+    responsive: true,
     plugins: {
       legend: {
+        display: true,
         position: 'right',
         labels: {
           color: '#fff',
           font: {
             size: 12
           },
-          padding: 20
+          padding: 20,
+          usePointStyle: true
         }
       },
       tooltip: {
+        enabled: true,
         backgroundColor: 'rgba(0, 0, 0, 0.8)',
         titleFont: {
           size: 14
@@ -410,22 +452,22 @@ function Wallet() {
               <div className="chart-card">
                 <h3>Expenses Breakdown</h3>
                 <div className="chart-wrapper">
-                  {expensesData.labels && <Pie data={expensesData} options={chartOptions} />}
+                  <Pie data={expensesData} options={chartOptions} />
                 </div>
                 <div className="chart-total">
                   <p>Total Expenses</p>
-                  <h4>₹{totalExpenses.toLocaleString()}</h4>
+                  <h4>₹{totalOutgoing.toLocaleString()}</h4>
                 </div>
               </div>
 
               <div className="chart-card">
                 <h3>Deposits Breakdown</h3>
                 <div className="chart-wrapper">
-                  {depositsData.labels && <Pie data={depositsData} options={chartOptions} />}
+                  <Pie data={depositsData} options={chartOptions} />
                 </div>
                 <div className="chart-total">
                   <p>Total Deposits</p>
-                  <h4>₹{totalDeposits.toLocaleString()}</h4>
+                  <h4>₹{totalIncoming.toLocaleString()}</h4>
                 </div>
               </div>
             </div>

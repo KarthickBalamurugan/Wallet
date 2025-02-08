@@ -131,6 +131,7 @@
   border-radius: 15px;
   padding: 1.5rem;
   transition: transform 0.3s ease;
+  min-height: 400px;
 }
 
 .chart-card:hover {
@@ -148,6 +149,7 @@
   height: 300px;
   position: relative;
   margin: 0 auto;
+  padding: 20px;
 }
 
 .chart-total {
@@ -685,4 +687,10 @@ select:focus {
 
 .transaction-item .amount.expense {
   color: #FF6384;
+}
+
+/* Ensure the canvas is properly sized */
+.chart-wrapper canvas {
+  width: 100% !important;
+  height: 100% !important;
 } 
