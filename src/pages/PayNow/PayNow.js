@@ -56,30 +56,28 @@ function PayNow() {
     return () => tl.kill();
   }, []);
 
-  const validatePaymentLink = async (link) => {
+  // Link validation function
+  async function validateLink(url) {
     try {
-      // API endpoint would go here
-      const response = await fetch('', {
+      const response = await fetch('http://localhost:3000/api/check-phishing', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Add any required authentication headers
-          // 'Authorization': 'Bearer YOUR_TOKEN'
         },
-        body: JSON.stringify({ paymentLink: link })
+        body: JSON.stringify({ url }),
       });
 
       if (!response.ok) {
-        throw new Error('Validation request failed');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
-      return data.isValid; // Assuming API returns { isValid: boolean }
+      const result = await response.json();
+      return result;
     } catch (error) {
-      console.error('Validation error:', error);
+      console.error('Error validating link:', error);
       throw error;
     }
-  };
+  }
 
   const handleValidation = async (e) => {
     e.preventDefault();
@@ -87,29 +85,52 @@ function PayNow() {
     setErrorMessage('');
     
     try {
-      const isValid = await validatePaymentLink(paymentLink);
-      setValidationResult(isValid);
+      const result = await validateLink(paymentLink);
+      console.log('Validation result:', result); // Debug log
       
-      // Animation for validation result
-      gsap.fromTo('.validation-message',
-        {
-          opacity: 0,
-          y: 20
-        },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.4,
-          ease: "power2.out"
-        }
-      );
+      if (result.isValid) {
+        setValidationResult(true);
+        // Handle successful validation
+        gsap.fromTo('.validation-message',
+          {
+            opacity: 0,
+            y: 20
+          },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.4,
+            ease: "power2.out"
+          }
+        );
+      } else {
+        setValidationResult(false);
+        setErrorMessage(result.message || 'Invalid payment link');
+      }
     } catch (error) {
-      setErrorMessage('Failed to validate link. Please try again.');
+      console.error('Validation error:', error);
       setValidationResult(false);
+      setErrorMessage('Failed to validate link. Please try again.');
     } finally {
       setIsValidating(false);
     }
   };
+
+  // Example validation check on component mount
+  useEffect(() => {
+    // Test the validation with an example URL
+    const testValidation = async () => {
+      try {
+        const urlToValidate = 'https://example.com';
+        const result = await validateLink(urlToValidate);
+        console.log('Initial validation test:', result);
+      } catch (error) {
+        console.error('Test validation error:', error);
+      }
+    };
+
+    testValidation();
+  }, []);
 
   return (
     <PageTransition>
@@ -131,6 +152,8 @@ function PayNow() {
                     onChange={(e) => setPaymentLink(e.target.value)}
                     placeholder="Enter payment link"
                     required
+                    pattern="https?://.*"
+                    title="Please enter a valid URL starting with http:// or https://"
                   />
                 </div>
                 
@@ -144,7 +167,7 @@ function PayNow() {
                       <FontAwesomeIcon icon={faSpinner} spin /> 
                       Validating...
                     </>
-                  ) : 'Validate Link'}
+                  ) : 'Pay Now'}
                 </button>
               </form>
 
@@ -157,7 +180,7 @@ function PayNow() {
                   />
                   <span>
                     {errorMessage || (validationResult 
-                      ? 'Valid payment link' 
+                      ? 'Valid payment link - Processing payment...' 
                       : 'Invalid payment link. Please check the format.')}
                   </span>
                 </div>

@@ -167,6 +167,52 @@
   font-size: 1.5rem;
 }
 
+.net-balance-container {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+}
+
+.net-balance-card {
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.balance-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.balance-header svg {
+  color: #00ff9d;
+  font-size: 1.5rem;
+}
+
+.balance-header h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.2rem;
+}
+
+.balance-amount {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.balance-amount .positive {
+  color: #00ff9d;
+}
+
+.balance-amount .negative {
+  color: #ff4d4d;
+}
+
 .net-balance-card {
   background: rgba(255, 255, 255, 0.05);
   border-radius: 15px;

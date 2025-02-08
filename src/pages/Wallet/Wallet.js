@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faPlus, faWallet, faMoneyBillTransfer, faArrowUp, faArrowDown } from '@fortawesome/free-solid-svg-icons';
 import { Pie } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -45,10 +45,9 @@ function Wallet() {
 
   // Track all transactions
   const [transactions, setTransactions] = useState([
-    { type: 'deposit', category: 'Salary', amount: 15000 },
-    { type: 'deposit', category: 'Bonus', amount: 5000 },
-    { type: 'expense', category: 'Food', amount: 2500 },
-    { type: 'expense', category: 'Shopping', amount: 3500 }
+    { id: 1, type: 'incoming', amount: 5000, date: '2024-03-15', description: 'Salary' },
+    { id: 2, type: 'outgoing', amount: 1500, date: '2024-03-16', description: 'Rent' },
+    // Add more transactions as needed
   ]);
 
   // Calculate totals by category
@@ -65,6 +64,10 @@ function Wallet() {
   const [depositsData, setDepositsData] = useState({});
 
   const cardsRef = useRef([]);
+
+  const [netBalance, setNetBalance] = useState(0);
+  const [totalIncoming, setTotalIncoming] = useState(0);
+  const [totalOutgoing, setTotalOutgoing] = useState(0);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -126,6 +129,25 @@ function Wallet() {
     });
   }, [transactions]);
 
+  useEffect(() => {
+    // Calculate all financial metrics
+    const calculateBalances = () => {
+      const incoming = transactions
+        .filter(t => t.type === 'incoming')
+        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+
+      const outgoing = transactions
+        .filter(t => t.type === 'outgoing')
+        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+
+      setTotalIncoming(incoming);
+      setTotalOutgoing(outgoing);
+      setNetBalance(incoming - outgoing);
+    };
+
+    calculateBalances();
+  }, [transactions]);
+
   const handleAddMoney = (e) => {
     e.preventDefault();
     if (amount && !isNaN(amount) && transactionCategory) {
@@ -180,8 +202,6 @@ function Wallet() {
   const totalDeposits = transactions
     .filter(t => t.type === 'deposit')
     .reduce((sum, t) => sum + t.amount, 0);
-
-  const netBalance = totalDeposits - totalExpenses;
 
   const chartOptions = {
     plugins: {
@@ -410,15 +430,17 @@ function Wallet() {
               </div>
             </div>
 
-            <div className="net-balance-card">
-              <div className="balance-content">
-                <h3>Net Balance</h3>
-                <p className={netBalance >= 0 ? 'positive' : 'negative'}>
-                  ₹{netBalance.toLocaleString()}
-                </p>
-                <span className={`balance-indicator ${netBalance >= 0 ? 'positive' : 'negative'}`}>
-                  {netBalance >= 0 ? 'Surplus' : 'Deficit'}
-                </span>
+            <div className="net-balance-container">
+              <div className="net-balance-card">
+                <div className="balance-header">
+                  <FontAwesomeIcon icon={faWallet} />
+                  <h3>Net Balance</h3>
+                </div>
+                <div className="balance-amount">
+                  <span className={netBalance >= 0 ? 'positive' : 'negative'}>
+                    {netBalance >= 0 ? '+' : '-'} ₹ {Math.abs(netBalance).toLocaleString('en-IN')}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
