@@ -1,7 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './Hero.css';
 
 function Hero() {
+  const navigate = useNavigate();
+
   return (
     <div className="hero-container">
       <div className="hero-content">
@@ -16,7 +19,9 @@ function Hero() {
         <p className="hero-tagline">
           Take control of your finances—securely and intelligently.
         </p>
-        <button className="hero-cta">Get Started</button>
+        <button className="hero-cta" onClick={() => navigate('/wallet')}>
+          Get Started
+        </button>
       </div>
     </div>
   );
